@@ -50,6 +50,28 @@ pub enum CacheType {
     // 云存储
     BaiduNetdiskCache,  // 百度网盘
 
+    // 笔记和文档
+    NotionCache,        // Notion 笔记
+
+    // 视频会议
+    ZoomCache,         // Zoom 视频会议
+
+    // 安全软件
+    Sec360Cache,        // 360 安全软件
+    Browser360Browser, // 360浏览器（区分于安全软件）
+
+    // SDK 和工具
+    SecretSDKCache,    // secretsdk
+
+    // 交易平台
+    FTNNEfpCache,      // FTNN 交易所
+
+    // OCR 工具
+    OCR2345Cache,      // 2345OCR
+
+    // Python 环境
+    PythonEnvCache,     // Python 环境
+
     // 通用
     RecycleBin,
 }
@@ -86,6 +108,14 @@ impl CacheType {
             CacheType::JianyingProCache => "剪映专业版缓存",
             CacheType::IntelGraphicsCache => "Intel 图形缓存",
             CacheType::BaiduNetdiskCache => "百度网盘缓存",
+            CacheType::NotionCache => "Notion 笔记",
+            CacheType::ZoomCache => "Zoom 视频会议",
+            CacheType::Sec360Cache => "360 安全软件",
+            CacheType::Browser360Browser => "360浏览器",
+            CacheType::SecretSDKCache => "SecretSDK 缓存",
+            CacheType::FTNNEfpCache => "FTNN 交易所缓存",
+            CacheType::OCR2345Cache => "2345OCR 缓存",
+            CacheType::PythonEnvCache => "Python 环境缓存",
             CacheType::RecycleBin => "回收站",
         }
     }

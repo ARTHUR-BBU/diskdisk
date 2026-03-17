@@ -241,6 +241,21 @@ fn parse_cache_type(type_str: &str) -> CacheType {
         "IntelGraphicsCache" => CacheType::IntelGraphicsCache,
         // 云存储
         "BaiduNetdiskCache" => CacheType::BaiduNetdiskCache,
+        // 笔记和文档
+        "NotionCache" => CacheType::NotionCache,
+        // 视频会议
+        "ZoomCache" => CacheType::ZoomCache,
+        // 安全软件
+        "Sec360Cache" => CacheType::Sec360Cache,
+        "Browser360Browser" => CacheType::Browser360Browser,
+        // SDK 和工具
+        "SecretSDKCache" => CacheType::SecretSDKCache,
+        // 交易��台
+        "FTNNEfpCache" => CacheType::FTNNEfpCache,
+        // OCR 工具
+        "OCR2345Cache" => CacheType::OCR2345Cache,
+        // Python 环境
+        "PythonEnvCache" => CacheType::PythonEnvCache,
         // 通用
         "RecycleBin" => CacheType::RecycleBin,
         _ => CacheType::WindowsTemp, // 默认值

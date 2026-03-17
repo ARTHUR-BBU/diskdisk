@@ -267,6 +267,80 @@ impl Scanner {
                 description: "百度网盘缓存",
                 dangerous: false,
             },
+            // 笔记和文档
+            CacheLocation {
+                cache_type: CacheType::NotionCache,
+                paths: vec![
+                    r"%APPDATA%\Notion".to_string(),
+                ],
+                description: "Notion 笔记缓存",
+                dangerous: false,
+            },
+            // 视频会议
+            CacheLocation {
+                cache_type: CacheType::ZoomCache,
+                paths: vec![
+                    r"%APPDATA%\Zoom".to_string(),
+                ],
+                description: "Zoom 视频会议缓存",
+                dangerous: false,
+            },
+            // 安全软件
+            CacheLocation {
+                cache_type: CacheType::Sec360Cache,
+                paths: vec![
+                    r"%APPDATA%\360Safe".to_string(),
+                    r"%APPDATA%\360desktoplite".to_string(),
+                    r"%APPDATA%\360Quarant".to_string(),
+                ],
+                description: "360 安全软件缓存",
+                dangerous: false,
+            },
+            CacheLocation {
+                cache_type: CacheType::Browser360Browser,
+                paths: vec![
+                    r"%APPDATA%\360browser".to_string(),
+                ],
+                description: "360浏览器缓存",
+                dangerous: false,
+            },
+            // SDK 和工具
+            CacheLocation {
+                cache_type: CacheType::SecretSDKCache,
+                paths: vec![
+                    r"%APPDATA%\secoresdk".to_string(),
+                ],
+                description: "SecretSDK 缓存",
+                dangerous: false,
+            },
+            // 交易平台
+            CacheLocation {
+                cache_type: CacheType::FTNNEfpCache,
+                paths: vec![
+                    r"%APPDATA%\FTNN".to_string(),
+                ],
+                description: "FTNN 交易所缓存",
+                dangerous: false,
+            },
+            // OCR 工具
+            CacheLocation {
+                cache_type: CacheType::OCR2345Cache,
+                paths: vec![
+                    r"%APPDATA%\2345OCR".to_string(),
+                ],
+                description: "2345OCR 缓存",
+                dangerous: false,
+            },
+            // Python 环境
+            CacheLocation {
+                cache_type: CacheType::PythonEnvCache,
+                paths: vec![
+                    r"%APPDATA%\Python".to_string(),
+                    r"%APPDATA%\pip".to_string(),
+                ],
+                description: "Python 环境缓存",
+                dangerous: false,
+            },
         ]
     }
 
