@@ -1,0 +1,52 @@
+# Rust
+target/
+**/target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 构建输出
+dist/
+build/
+*.msi
+*.exe
+*.dmg
+*.app
+
+# Tauri
+src-tauri/target/
+desktop-gui/target/
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+*.cache
+
+# 测试
+*.prof
+*.prof.raw
+
+# Claude AI
+.claude/
+*.claude*

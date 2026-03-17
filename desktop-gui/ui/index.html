@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiskDisk - Windows 磁盘清理工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app" class="flex flex-col h-screen">
+        <!-- 顶部导航栏 -->
+        <header class="gradient-bg text-white shadow-lg">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">🧹</span>
+                        <div>
+                            <h1 class="text-2xl font-bold">DiskDisk</h1>
+                            <p class="text-sm text-purple-100">Windows 磁盘清理工具</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="showTab('scan')" id="btn-scan-tab" class="tab-btn px-4 py-2 rounded-lg bg-white/20 hover:bg-white/30 transition">
+                            🔍 扫描
+                        </button>
+                        <button onclick="showTab('clean')" id="btn-clean-tab" class="tab-btn px-4 py-2 rounded-lg hover:bg-white/20 transition">
+                            🧹 清理
+                        </button>
+                        <button onclick="showTab('settings')" id="btn-settings-tab" class="tab-btn px-4 py-2 rounded-lg hover:bg-white/20 transition">
+                            ⚙️ 设置
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区 -->
+        <main class="flex-1 container mx-auto px-6 py-8 overflow-auto">
+            <!-- 扫描页面 -->
+            <div id="scan-page" class="page">
+                <!-- 扫描按钮 -->
+                <div id="scan-start" class="text-center py-12">
+                    <div class="mb-8">
+                        <span class="text-6xl">🔍</span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-4">扫描系统缓存</h2>
+                    <p class="text-gray-600 mb-8">点击下方按钮开始扫描您的系统缓存文件</p>
+                    <button onclick="startScan()" class="gradient-bg text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transition transform hover:scale-105">
+                        开始扫描
+                    </button>
+                </div>
+
+                <!-- 扫描进度 -->
+                <div id="scan-progress" class="hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-white rounded-2xl shadow-lg p-8">
+                            <div class="text-center mb-6">
+                                <div class="loading-spinner inline-block w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full mb-4"></div>
+                                <h3 class="text-xl font-semibold text-gray-800">正在扫描...</h3>
+                                <p id="progress-message" class="text-gray-600 mt-2">准备扫描...</p>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div id="progress-bar" class="progress-bar bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full" style="width: 0%"></div>
+                            </div>
+                            <p id="progress-text" class="text-center text-gray-600 mt-2">0 / 0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 扫描结果 -->
+                <div id="scan-results" class="hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">扫描完成</h2>
+                        <p class="text-gray-600">发现以下可清理的缓存文件</p>
+                    </div>
+
+                    <!-- 统计卡片 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm">可清理空间</p>
+                                    <p id="total-size" class="text-3xl font-bold text-purple-600">0 MB</p>
+                                </div>
+                                <span class="text-4xl">💾</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm">文件数量</p>
+                                    <p id="total-files" class="text-3xl font-bold text-pink-600">0</p>
+                                </div>
+                                <span class="text-4xl">📁</span>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow p-6 card-hover transition">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-600 text-sm">缓存类型</p>
+                                    <p id="total-types" class="text-3xl font-bold text-indigo-600">0</p>
+                                </div>
+                                <span class="text-4xl">🗂️</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 缓存列表 -->
+                    <div id="cache-list" class="space-y-4">
+                        <!-- 动态生成 -->
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <button onclick="showTab('clean')" class="gradient-bg text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transition transform hover:scale-105">
+                            前往清理 →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 清理页面 -->
+            <div id="clean-page" class="page hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">选择要清理的缓存</h2>
+                    <p class="text-gray-600">勾选您想要清理的缓存类型</p>
+                </div>
+
+                <!-- 全选/取消 -->
+                <div class="bg-white rounded-xl shadow p-4 mb-6 flex items-center justify-between">
+                    <label class="flex items-center space-x-3 cursor-pointer">
+                        <input type="checkbox" id="select-all" onchange="toggleSelectAll()" class="w-5 h-5 text-purple-600 rounded">
+                        <span class="font-semibold text-gray-700">全选</span>
+                    </label>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-600">已选空间</p>
+                        <p id="selected-size" class="text-xl font-bold text-purple-600">0 MB</p>
+                    </div>
+                </div>
+
+                <!-- 可清理缓存列表 -->
+                <div id="clean-list" class="space-y-4 mb-8">
+                    <div class="text-center py-12 text-gray-500">
+                        <span class="text-4xl">📋</span>
+                        <p class="mt-4">请先扫描系统缓存</p>
+                    </div>
+                </div>
+
+                <!-- 清理按钮 -->
+                <div id="clean-actions" class="hidden">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="flex">
+                            <span class="text-2xl mr-3">⚠️</span>
+                            <div>
+                                <p class="font-semibold text-yellow-800">清理前请注意</p>
+                                <p class="text-yellow-700 text-sm">清理后，相关应用程序可能会重新生成缓存文件，首次启动时可能较慢。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="startClean()" class="gradient-bg text-white px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-lg transition transform hover:scale-105">
+                            🧹 开始清理
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 清理进度 -->
+                <div id="clean-progress" class="hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-white rounded-2xl shadow-lg p-8">
+                            <div class="text-center mb-6">
+                                <div class="loading-spinner inline-block w-16 h-16 border-4 border-green-200 border-t-green-600 rounded-full mb-4"></div>
+                                <h3 class="text-xl font-semibold text-gray-800">正在清理...</h3>
+                                <p class="text-gray-600 mt-2">请稍候，正在删除缓存文件...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 清理完成 -->
+                <div id="clean-complete" class="hidden">
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+                            <span class="text-6xl">✨</span>
+                            <h3 class="text-2xl font-bold text-gray-800 mt-4">清理完成！</h3>
+                            <div class="mt-6 space-y-3">
+                                <p class="text-gray-600">
+                                    已删除文件: <span id="cleaned-files" class="font-bold text-purple-600">0</span> 个
+                                </p>
+                                <p class="text-gray-600">
+                                    释放空间: <span id="freed-space" class="font-bold text-green-600">0 MB</span>
+                                </p>
+                            </div>
+                            <div class="mt-8">
+                                <button onclick="location.reload()" class="gradient-bg text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition">
+                                    🔄 重新扫描
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 设置页面 -->
+            <div id="settings-page" class="page hidden">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">设置</h2>
+                    <p class="text-gray-600">配置清理偏好和选项</p>
+                </div>
+
+                <div class="max-w-2xl">
+                    <div class="bg-white rounded-xl shadow p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">清理选项</h3>
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <p class="font-medium text-gray-700">自动清理危险缓存</p>
+                                    <p class="text-sm text-gray-500">自动选中需要谨慎清理的缓存类型</p>
+                                </div>
+                                <input type="checkbox" class="w-5 h-5 text-purple-600 rounded">
+                            </label>
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <p class="font-medium text-gray-700">清理后显示通知</p>
+                                    <p class="text-sm text-gray-500">清理完成后显示桌面通知</p>
+                                </div>
+                                <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">定时清理</h3>
+                        <div class="space-y-4">
+                            <label class="flex items-center justify-between cursor-pointer">
+                                <div>
+                                    <p class="font-medium text-gray-700">启用定时清理</p>
+                                    <p class="text-sm text-gray-500">每周自动清理一次缓存</p>
+                                </div>
+                                <input type="checkbox" class="w-5 h-5 text-purple-600 rounded">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">关于</h3>
+                        <div class="space-y-2 text-gray-600">
+                            <p><strong>版本:</strong> 0.1.0</p>
+                            <p><strong>作者:</strong> DiskDisk Team</p>
+                            <p><strong>许可:</strong> MIT OR Apache-2.0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="bg-gray-100 border-t">
+            <div class="container mx-auto px-6 py-3">
+                <div class="flex items-center justify-between text-sm text-gray-600">
+                    <div>
+                        <span id="status-text">就绪</span>
+                    </div>
+                    <div>
+                        DiskDisk v0.1.0
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { invoke } from '@tauri-apps/api/core';
+        import { listen } from '@tauri-apps/api/event';
+
+        // 全局状态
+        let scanResults = [];
+        let selectedItems = [];
+
+        // 页面切换
+        window.showTab = function(tabName) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+
+            // 显示目标页面
+            document.getElementById(`${tabName}-page`).classList.remove('hidden');
+
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white/20');
+            });
+            document.getElementById(`btn-${tabName}-tab`).classList.add('bg-white/20');
+
+            // 如果切换到清理页面，更新清理列表
+            if (tabName === 'clean' && scanResults.length > 0) {
+                updateCleanList();
+            }
+        };
+
+        // 开始扫描
+        window.startScan = async function() {
+            document.getElementById('scan-start').classList.add('hidden');
+            document.getElementById('scan-progress').classList.remove('hidden');
+            document.getElementById('status-text').textContent = '正在扫描...';
+
+            try {
+                // 监听扫描进度
+                await listen('scan-progress', (event) => {
+                    const progress = event.payload;
+                    document.getElementById('progress-message').textContent = progress.message;
+                    document.getElementById('progress-bar').style.width = `${(progress.current / progress.total) * 100}%`;
+                    document.getElementById('progress-text').textContent = `${progress.current} / ${progress.total}`;
+                });
+
+                // 监听扫描完成
+                await listen('scan-complete', (event) => {
+                    scanResults = event.payload;
+                    displayScanResults(scanResults);
+                });
+
+                // 调用扫描命令
+                await invoke('scan_all_caches');
+            } catch (error) {
+                console.error('扫描失败:', error);
+                alert('扫描失败: ' + error);
+                document.getElementById('scan-start').classList.remove('hidden');
+                document.getElementById('scan-progress').classList.add('hidden');
+            }
+        };
+
+        // 显示扫描结果
+        function displayScanResults(results) {
+            document.getElementById('scan-progress').classList.add('hidden');
+            document.getElementById('scan-results').classList.remove('hidden');
+
+            // 计算统计
+            const totalSize = results.reduce((sum, r) => sum + r.size, 0);
+            const totalFiles = results.reduce((sum, r) => sum + r.file_count, 0);
+
+            document.getElementById('total-size').textContent = formatSize(totalSize);
+            document.getElementById('total-files').textContent = totalFiles.toLocaleString();
+            document.getElementById('total-types').textContent = results.length;
+
+            // 显示缓存列表
+            const cacheList = document.getElementById('cache-list');
+            cacheList.innerHTML = '';
+
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'bg-white rounded-xl shadow p-6 card-hover transition';
+
+                const warningIcon = result.dangerous ? '<span class="text-yellow-500 ml-2">⚠️</span>' : '';
+
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" id="cache-${result.cache_type}"
+                                   onchange="toggleCacheSelection('${result.cache_type}')"
+                                   ${result.selected ? 'checked' : ''}
+                                   class="w-5 h-5 text-purple-600 rounded">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${result.display_name} ${warningIcon}</h4>
+                                <p class="text-sm text-gray-600">${result.path}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-purple-600">${formatSize(result.size)}</p>
+                            <p class="text-sm text-gray-600">${result.file_count.toLocaleString()} 文件</p>
+                        </div>
+                    </div>
+                `;
+
+                cacheList.appendChild(item);
+            });
+
+            document.getElementById('status-text').textContent = `扫描完成，发现 ${results.length} 种缓存`;
+        }
+
+        // 更新清理列表
+        function updateCleanList() {
+            const cleanList = document.getElementById('clean-list');
+            cleanList.innerHTML = '';
+
+            if (scanResults.length === 0) {
+                cleanList.innerHTML = `
+                    <div class="text-center py-12 text-gray-500">
+                        <span class="text-4xl">📋</span>
+                        <p class="mt-4">请先扫描系统缓存</p>
+                    </div>
+                `;
+                return;
+            }
+
+            scanResults.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'bg-white rounded-xl shadow p-4';
+
+                const warningIcon = result.dangerous ? '<span class="text-yellow-500 ml-2">⚠️</span>' : '';
+
+                item.innerHTML = `
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" id="clean-${result.cache_type}"
+                                   onchange="updateSelectedItems()"
+                                   ${result.selected ? 'checked' : ''}
+                                   class="w-5 h-5 text-purple-600 rounded">
+                            <div>
+                                <p class="font-medium text-gray-800">${result.display_name} ${warningIcon}</p>
+                                <p class="text-sm text-gray-600">${result.file_count.toLocaleString()} 文件</p>
+                            </div>
+                        </div>
+                        <div class="text-lg font-semibold text-purple-600">${formatSize(result.size)}</div>
+                    </label>
+                `;
+
+                cleanList.appendChild(item);
+            });
+
+            document.getElementById('clean-actions').classList.remove('hidden');
+            updateSelectedItems();
+        }
+
+        // 更新选中项
+        window.updateSelectedItems = function() {
+            selectedItems = scanResults.filter(result => {
+                const checkbox = document.getElementById(`clean-${result.cache_type}`);
+                return checkbox && checkbox.checked;
+            });
+
+            const selectedSize = selectedItems.reduce((sum, r) => sum + r.size, 0);
+            document.getElementById('selected-size').textContent = formatSize(selectedSize);
+        };
+
+        // 全选/取消
+        window.toggleSelectAll = function() {
+            const selectAll = document.getElementById('select-all').checked;
+            document.querySelectorAll('[id^="clean-"]').forEach(checkbox => {
+                checkbox.checked = selectAll;
+            });
+            updateSelectedItems();
+        };
+
+        // 开始清理
+        window.startClean = async function() {
+            if (selectedItems.length === 0) {
+                alert('请至少选择一种要清理的缓存');
+                return;
+            }
+
+            if (!confirm(`确认要清理选中的 ${selectedItems.length} 种缓存吗？\n\n此操作不可撤销！`)) {
+                return;
+            }
+
+            document.getElementById('clean-actions').classList.add('hidden');
+            document.getElementById('clean-list').classList.add('hidden');
+            document.getElementById('clean-progress').classList.remove('hidden');
+            document.getElementById('status-text').textContent = '正在清理...';
+
+            try {
+                // 监听清理完成
+                await listen('clean-complete', (event) => {
+                    const stats = event.payload;
+                    document.getElementById('clean-progress').classList.add('hidden');
+                    document.getElementById('clean-complete').classList.remove('hidden');
+                    document.getElementById('cleaned-files').textContent = stats.files_deleted.toLocaleString();
+                    document.getElementById('freed-space').textContent = formatSize(stats.space_freed);
+                    document.getElementById('status-text').textContent = '清理完成！';
+                });
+
+                // 调用清理命令
+                await invoke('clean_selected_caches', { selectedItems });
+            } catch (error) {
+                console.error('清理失败:', error);
+                alert('清理失败: ' + error);
+                document.getElementById('clean-progress').classList.add('hidden');
+                document.getElementById('clean-actions').classList.remove('hidden');
+            }
+        };
+
+        // 格式化文件大小
+        function formatSize(bytes) {
+            const KB = 1024;
+            const MB = KB * 1024;
+            const GB = MB * 1024;
+
+            if (bytes >= GB) {
+                return (bytes / GB).toFixed(2) + ' GB';
+            } else if (bytes >= MB) {
+                return (bytes / MB).toFixed(2) + ' MB';
+            } else if (bytes >= KB) {
+                return (bytes / KB).toFixed(2) + ' KB';
+            } else {
+                return bytes + ' B';
+            }
+        }
+    </script>
+</body>
+</html>

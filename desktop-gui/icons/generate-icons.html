@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiskDisk 图标生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .icon-preview {
+            text-align: center;
+            margin: 30px 0;
+        }
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin: 10px;
+        }
+        .buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .step {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 DiskDisk 图标生成器</h1>
+
+        <div class="info">
+            <strong>说明：</strong> 此页面用于生成 DiskDisk 应用的各种尺寸图标。
+            点击下方按钮下载对应尺寸的图标文件。
+        </div>
+
+        <div class="icon-preview">
+            <h3>图标预览</h3>
+            <canvas id="icon512" width="512" height="512"></canvas>
+        </div>
+
+        <div class="buttons">
+            <button onclick="downloadIcon('icon-512.png', 512)">下载 512x512 (源文件)</button>
+            <button onclick="downloadIcon('128x128.png', 128)">下载 128x128</button>
+            <button onclick="downloadIcon('32x32.png', 32)">下载 32x32</button>
+            <button onclick="downloadAll()">下载所有图标</button>
+        </div>
+
+        <div class="info">
+            <h3>📋 使用步骤：</h3>
+            <div class="step">
+                <strong>步骤 1:</strong> 点击上方按钮下载所有图标文件
+            </div>
+            <div class="step">
+                <strong>步骤 2:</strong> 将下载的 PNG 文件移动到 <code>desktop-gui/icons/</code> 目录
+            </div>
+            <div class="step">
+                <strong>步骤 3:</strong> 对于 Windows，使用在线工具将 PNG 转换为 ICO：
+                <a href="https://convertio.co/zh/png-ico/" target="_blank">https://convertio.co/zh/png-ico/</a>
+            </div>
+            <div class="step">
+                <strong>步骤 4:</strong> 对于 macOS，使用在线工具转换为 ICNS：
+                <a href="https://cloudconvert.com/png-to-icns" target="_blank">https://cloudconvert.com/png-to-icns</a>
+            </div>
+            <div class="step">
+                <strong>步骤 5:</strong> 将生成的 icon.ico 和 icon.icns 也放入 icons 目录
+            </div>
+        </div>
+
+        <div class="info" style="background: #fff3e3;">
+            <h3>⚠️ 注意事项：</h3>
+            <ul>
+                <li>开发阶段可以使用默认图标，不影响功能测试</li>
+                <li>正式发布前务必添加自定义图标</li>
+                <li>图标文件必须命名为：icon.ico、icon.icns、128x128.png 等</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 绘制图标
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 512;
+
+            ctx.scale(scale, scale);
+
+            // 背景渐变
+            const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+
+            // 圆角矩形背景
+            ctx.beginPath();
+            ctx.roundRect(0, 0, 512, 512, 100);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // 扫帚柄
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.roundRect(340, 20, 20, 280, 10);
+            ctx.fill();
+
+            // 扫帚头
+            ctx.beginPath();
+            ctx.roundRect(100, 260, 260, 100, 15);
+            ctx.fill();
+
+            // 扫帚毛
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            const bristles = [
+                [120, 340, 15, 60],
+                [145, 340, 15, 70],
+                [170, 340, 15, 80],
+                [195, 340, 15, 80],
+                [220, 340, 15, 70],
+                [245, 340, 15, 60],
+                [270, 340, 15, 80],
+                [295, 340, 15, 70],
+                [320, 340, 15, 60]
+            ];
+
+            bristles.forEach(([x, y, w, h]) => {
+                ctx.beginPath();
+                ctx.roundRect(x, y, w, h, 7);
+                ctx.fill();
+            });
+
+            // 闪光效果
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.arc(80, 100, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(330, 80, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(340, 200, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 下载图标
+        function downloadIcon(filename, size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            drawIcon(canvas, size);
+
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // 下载所有图标
+        function downloadAll() {
+            const sizes = [
+                ['icon-512.png', 512],
+                ['128x128.png', 128],
+                ['128x128@2x.png', 256],
+                ['32x32.png', 32]
+            ];
+
+            sizes.forEach(([name, size], index) => {
+                setTimeout(() => {
+                    downloadIcon(name, size);
+                }, index * 500);
+            });
+        }
+
+        // 初始化绘制
+        window.onload = function() {
+            const canvas = document.getElementById('icon512');
+            drawIcon(canvas, 512);
+        };
+    </script>
+</body>
+</html>
